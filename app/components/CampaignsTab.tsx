@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import {
-  Wand2, Plus, Play, Pause, Download, Share2,
-  Monitor, Smartphone, Square, FileVideo, Grid3x3,
-  ChevronRight, Settings, Sparkles, Layers,
+import { 
+  Wand2, Plus, Play, Pause, Download, Share2, 
+  Monitor, Smartphone, Square, FileVideo, Grid3x3, 
+  ChevronRight, Settings, Sparkles, Layers, 
   CheckCircle, Clock, AlertCircle, Copy, Edit3,
   Package, Target, Zap, ArrowRight, BarChart3,
-  X, Camera, Image
+  X, Camera, Image, Video
 } from 'lucide-react';
 
 // Campaign interfaces
@@ -14,8 +14,10 @@ interface PlatformVariation {
   dimensions: string;
   aspectRatio: string;
   status: 'pending' | 'generating' | 'completed' | 'failed';
-  optimizations: string[];
+  progress?: number;
+  videoUrl?: string;
   thumbnailUrl?: string;
+  optimizations: string[];
 }
 
 interface Campaign {
@@ -33,46 +35,33 @@ interface Campaign {
   totalCost?: number;
 }
 
-// NEW: typed shape for the new campaign form state (so we don't use `any`)
-interface NewCampaign {
-  name: string;
-  client: 'DFSA' | 'Atlas' | 'YourBud';
-  masterPrompt: string;
-  cameraMovement: string;
-  duration: number;
-  quality: string;
-  selectedPlatforms: string[];
-}
-
-// Platform configs for variations
+// Platform configurations
 const PLATFORM_CONFIGS = [
-  { id: 'instagram-feed', name: 'Instagram Feed', icon: Square, dimensions: '1080x1080', aspectRatio: '1:1', color: 'bg-gradient-to-r from-pink-500 to-orange-500' },
-  { id: 'instagram-story', name: 'Instagram Story', icon: Smartphone, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
-  { id: 'facebook-feed', name: 'Facebook Feed', icon: Monitor, dimensions: '1200x630', aspectRatio: '1.91:1', color: 'bg-gradient-to-r from-blue-500 to-cyan-500' },
-  { id: 'youtube-thumbnail', name: 'YouTube Thumbnail', icon: FileVideo, dimensions: '1280x720', aspectRatio: '16:9', color: 'bg-gradient-to-r from-red-500 to-orange-500' },
-  { id: 'google-display', name: 'Google Display', icon: Grid3x3, dimensions: '300x250', aspectRatio: '1.2:1', color: 'bg-gradient-to-r from-emerald-500 to-teal-500' },
-  { id: 'linkedin-post', name: 'LinkedIn Post', icon: Square, dimensions: '1200x1200', aspectRatio: '1:1', color: 'bg-gradient-to-r from-sky-500 to-indigo-500' },
-  { id: 'tiktok', name: 'TikTok', icon: Smartphone, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-gradient-to-r from-fuchsia-500 to-rose-500' },
-  { id: 'youtube-short', name: 'YouTube Short', icon: Smartphone, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-gradient-to-r from-red-500 to-pink-500' }
+  { id: 'instagram-feed', name: 'Instagram Feed', icon: Square, dimensions: '1080x1080', aspectRatio: '1:1', color: 'bg-pink-500' },
+  { id: 'instagram-story', name: 'Instagram Story', icon: Smartphone, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-purple-500' },
+  { id: 'facebook-feed', name: 'Facebook Feed', icon: Monitor, dimensions: '1200x630', aspectRatio: '1.91:1', color: 'bg-blue-500' },
+  { id: 'youtube-short', name: 'YouTube Short', icon: FileVideo, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-red-500' },
+  { id: 'tiktok', name: 'TikTok', icon: Grid3x3, dimensions: '1080x1920', aspectRatio: '9:16', color: 'bg-slate-800' },
+  { id: 'linkedin-post', name: 'LinkedIn Post', icon: Square, dimensions: '1200x1200', aspectRatio: '1:1', color: 'bg-blue-600' }
 ];
 
-// Example template library
+// Campaign templates
 const CAMPAIGN_TEMPLATES = [
   {
     id: 'product-launch',
     name: 'Product Launch',
     icon: Package,
-    description: 'Announce a new product with hero visuals',
-    prompt: 'Premium product reveal with dramatic lighting and dynamic camera moves',
-    platforms: ['instagram-feed', 'youtube-thumbnail', 'linkedin-post']
+    description: 'Hero product reveal across all platforms',
+    prompt: 'Cinematic reveal of premium dried apricots with dramatic lighting',
+    platforms: ['instagram-feed', 'instagram-story', 'youtube-short']
   },
   {
-    id: 'awareness',
-    name: 'Brand Awareness',
+    id: 'lifestyle',
+    name: 'Lifestyle Campaign',
     icon: Target,
-    description: 'Build brand recall with lifestyle visuals',
-    prompt: 'Warm, lifestyle scenes highlighting brand values and product in context',
-    platforms: ['facebook-feed', 'instagram-feed', 'google-display']
+    description: 'Family and lifestyle focused content',
+    prompt: 'Family enjoying healthy dried fruit snacks at breakfast table',
+    platforms: ['facebook-feed', 'instagram-feed', 'linkedin-post']
   },
   {
     id: 'flash-sale',
@@ -89,11 +78,11 @@ const CampaignsTab = () => {
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
-  // New campaign form state (now typed)
-  const [newCampaign, setNewCampaign] = useState<NewCampaign>({
+  
+  // New campaign form state
+  const [newCampaign, setNewCampaign] = useState({
     name: '',
-    client: 'DFSA',
+    client: 'DFSA' as const,
     masterPrompt: '',
     cameraMovement: 'dolly-in',
     duration: 5,
@@ -104,7 +93,7 @@ const CampaignsTab = () => {
   // Create new campaign
   const createCampaign = () => {
     const campaign: Campaign = {
-      id: `cmp_${Date.now()}`,
+      id: `campaign-${Date.now()}`,
       name: newCampaign.name || 'Untitled Campaign',
       client: newCampaign.client,
       masterPrompt: newCampaign.masterPrompt,
@@ -130,7 +119,7 @@ const CampaignsTab = () => {
     setCampaigns([campaign, ...campaigns]);
     setShowNewCampaign(false);
     setSelectedCampaign(campaign);
-
+    
     // Reset form
     setNewCampaign({
       name: '',
@@ -148,54 +137,77 @@ const CampaignsTab = () => {
     const campaign = campaigns.find(c => c.id === campaignId);
     if (!campaign) return;
 
-    // Update campaign status to generating
-    setCampaigns(prev => prev.map(c =>
-      c.id === campaignId
+    // Update campaign status
+    setCampaigns(prev => prev.map(c => 
+      c.id === campaignId 
         ? { ...c, status: 'generating' as const }
         : c
     ));
 
-    // Simulate generation of each platform
-    for (let i = 0; i < campaign.platforms.length; i++) {
-      const platform = campaign.platforms[i];
-
-      // Update platform status to generating
+    // Simulate generation for each platform
+    for (const platform of campaign.platforms) {
+      // In production, this would call your API for each platform
+      console.log(`Generating ${platform.platform} variation...`);
+      
+      // Update platform status
       setCampaigns(prev => prev.map(c => {
-        if (c.id !== campaignId) return c;
-        return {
-          ...c,
-          platforms: c.platforms.map(p =>
-            p.platform === platform.platform
-              ? { ...p, status: 'generating' as const }
-              : p
-          )
-        };
+        if (c.id === campaignId) {
+          return {
+            ...c,
+            platforms: c.platforms.map(p => 
+              p.platform === platform.platform
+                ? { ...p, status: 'generating' as const, progress: 0 }
+                : p
+            )
+          };
+        }
+        return c;
       }));
 
-      // Simulate delay for generation
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      // Simulate progress
+      for (let progress = 0; progress <= 100; progress += 20) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setCampaigns(prev => prev.map(c => {
+          if (c.id === campaignId) {
+            return {
+              ...c,
+              platforms: c.platforms.map(p => 
+                p.platform === platform.platform
+                  ? { ...p, progress }
+                  : p
+              )
+            };
+          }
+          return c;
+        }));
+      }
 
-      // Update platform to completed with mock thumbnail
+      // Mark as completed
       setCampaigns(prev => prev.map(c => {
-        if (c.id !== campaignId) return c;
-        return {
-          ...c,
-          platforms: c.platforms.map(p =>
-            p.platform === platform.platform
-              ? {
-                  ...p,
-                  status: 'completed' as const,
-                  thumbnailUrl: `https://picsum.photos/seed/${campaignId}-${platform.platform}/600/338`
-                }
-              : p
-          )
-        };
+        if (c.id === campaignId) {
+          return {
+            ...c,
+            platforms: c.platforms.map(p => 
+              p.platform === platform.platform
+                ? { 
+                    ...p, 
+                    status: 'completed' as const, 
+                    progress: 100,
+                    videoUrl: '/api/placeholder/video.mp4',
+                    thumbnailUrl: '/api/placeholder/400/225'
+                  }
+                : p
+            )
+          };
+        }
+        return c;
       }));
     }
 
     // Update campaign status to completed
-    setCampaigns(prev => prev.map(c =>
-      c.id === campaignId
+    setCampaigns(prev => prev.map(c => 
+      c.id === campaignId 
         ? { ...c, status: 'completed' as const }
         : c
     ));
@@ -221,48 +233,97 @@ const CampaignsTab = () => {
           {platform.status === 'completed' && (
             <CheckCircle className="w-5 h-5 text-green-400" />
           )}
+          {platform.status === 'generating' && (
+            <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          )}
         </div>
 
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
+        {/* Preview area */}
+        <div className="aspect-video bg-slate-900 rounded-lg mb-3 relative overflow-hidden">
           {platform.thumbnailUrl ? (
             <img src={platform.thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <FileVideo className="w-12 h-12 text-slate-600" />
+            <div className="w-full h-full flex items-center justify-center">
+              <FileVideo className="w-8 h-8 text-slate-600" />
             </div>
           )}
-          {platform.status !== 'completed' && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full border-2 border-purple-400 border-t-transparent animate-spin" />
-                <span className="text-sm text-white">Generating…</span>
+          
+          {platform.status === 'generating' && platform.progress !== undefined && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white mb-1">{platform.progress}%</div>
+                <div className="text-xs text-slate-300">Generating...</div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          {platform.status === 'completed' && (
+            <>
+              <button className="flex-1 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1">
+                <Play className="w-3 h-3" /> Preview
+              </button>
+              <button className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
+                <Download className="w-4 h-4" />
+              </button>
+              <button className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
+                <Share2 className="w-4 h-4" />
+              </button>
+            </>
+          )}
+          {platform.status === 'pending' && (
+            <button className="flex-1 py-2 bg-slate-700 text-slate-400 rounded-lg text-sm font-medium">
+              Pending
+            </button>
+          )}
+          {platform.status === 'generating' && (
+            <button className="flex-1 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-medium">
+              Generating...
+            </button>
           )}
         </div>
       </div>
     );
   };
 
-  // Campaign list item
-  const CampaignItem = ({ campaign }: { campaign: Campaign }) => {
+  // Campaign card component
+  const CampaignCard = ({ campaign }: { campaign: Campaign }) => {
     const completedCount = campaign.platforms.filter(p => p.status === 'completed').length;
     const totalCount = campaign.platforms.length;
 
     return (
-      <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 hover:border-purple-500/40 transition-colors">
+      <div 
+        className="bg-slate-900 border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition-all cursor-pointer"
+        onClick={() => setSelectedCampaign(campaign)}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-1">{campaign.name}</h3>
+            <p className="text-slate-400 text-sm">{campaign.client} • {new Date(campaign.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            campaign.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+            campaign.status === 'generating' ? 'bg-blue-500/20 text-blue-400' :
+            campaign.status === 'partial' ? 'bg-yellow-500/20 text-yellow-400' :
+            'bg-slate-700 text-slate-400'
+          }`}>
+            {campaign.status}
+          </div>
+        </div>
+
+        <p className="text-slate-300 mb-4 line-clamp-2">{campaign.masterPrompt}</p>
+
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg border border-purple-500/30">
-              <Sparkles className="w-4 h-4 text-purple-300" />
+          <div className="flex gap-4 text-sm">
+            <div className="flex items-center gap-1 text-slate-400">
+              <Camera className="w-4 h-4" />
+              {campaign.cameraMovement}
             </div>
-            <div>
-              <h3 className="text-white font-medium">{campaign.name}</h3>
-              <div className="text-sm text-slate-400 flex items-center gap-2">
-                <span>{campaign.client}</span>
-                <span>•</span>
-                <span>{new Date(campaign.createdAt).toLocaleDateString()}</span>
-              </div>
+            <div className="flex items-center gap-1 text-slate-400">
+              <Clock className="w-4 h-4" />
+              {campaign.duration}s
             </div>
             <div className="flex items-center gap-1 text-slate-400">
               <Monitor className="w-4 h-4" />
@@ -277,111 +338,104 @@ const CampaignsTab = () => {
 
         {/* Platform preview */}
         <div className="flex gap-2 mt-4">
-          {campaign.platforms.slice(0, 4).map((platform, idx) => (
-            <div key={idx} className="w-1/4">
-              <PlatformCard platform={platform} campaign={campaign} />
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSelectedCampaign(campaign)}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-white border border-slate-600"
-            >
-              View Details
-            </button>
-            <button
-              onClick={() => generateCampaign(campaign.id)}
-              className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-sm text-white"
-            >
-              Generate All
-            </button>
-          </div>
-          {campaign.totalCost !== undefined && (
-            <div className="text-slate-400 text-sm">Est. Cost: ${campaign.totalCost.toFixed(2)}</div>
-          )}
+          {campaign.platforms.map(platform => {
+            const config = PLATFORM_CONFIGS.find(p => p.id === platform.platform)!;
+            const Icon = config.icon;
+            return (
+              <div 
+                key={platform.platform}
+                className={`p-2 rounded-lg ${
+                  platform.status === 'completed' ? 'bg-green-500/20' :
+                  platform.status === 'generating' ? 'bg-blue-500/20' :
+                  'bg-slate-800'
+                }`}
+              >
+                <Icon className="w-4 h-4 text-white" />
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   };
 
-  // Main render
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Layers className="h-6 w-6 text-purple-400" />
-          <h2 className="text-xl font-semibold">Campaigns</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Campaigns</h2>
+          <p className="text-slate-400">Create multi-platform video campaigns from a single brief</p>
         </div>
-
         <button
           onClick={() => setShowNewCampaign(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium hover:from-purple-500 hover:to-pink-500"
+          className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all flex items-center gap-2"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="w-4 h-4" />
           New Campaign
         </button>
       </div>
 
-      {/* Campaign List */}
-      <div className="grid gap-3">
-        {campaigns.length === 0 ? (
-          <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 text-slate-400 text-center">
-            No campaigns yet. Click “New Campaign” to create your first one.
-          </div>
-        ) : (
-          campaigns.map(c => <CampaignItem key={c.id} campaign={c} />)
-        )}
-      </div>
-
-      {/* New Campaign Modal */}
-      {showNewCampaign && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl">
-            <div className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">Create Campaign</h3>
-              </div>
-              <div className="flex items-center gap-2">
+      {/* Campaign Templates */}
+      {campaigns.length === 0 && !showNewCampaign && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-white mb-4">Quick Start Templates</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {CAMPAIGN_TEMPLATES.map(template => {
+              const Icon = template.icon;
+              return (
                 <button
-                  onClick={() => setSelectedTemplate(null)}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${
-                    selectedTemplate === null
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                      : 'bg-slate-800 text-slate-300 border border-slate-700'
-                  }`}
+                  key={template.id}
+                  onClick={() => {
+                    setSelectedTemplate(template.id);
+                    setNewCampaign({
+                      ...newCampaign,
+                      name: template.name,
+                      masterPrompt: template.prompt,
+                      selectedPlatforms: template.platforms
+                    });
+                    setShowNewCampaign(true);
+                  }}
+                  className="bg-slate-900 border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition-all text-left group"
                 >
-                  Custom
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">{template.name}</h4>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-3">{template.description}</p>
+                  <div className="flex gap-2">
+                    {template.platforms.map(platformId => {
+                      const config = PLATFORM_CONFIGS.find(p => p.id === platformId)!;
+                      const PlatformIcon = config.icon;
+                      return (
+                        <div key={platformId} className="p-2 bg-slate-800 rounded-lg">
+                          <PlatformIcon className="w-3 h-3 text-slate-400" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 text-purple-400 text-sm font-medium group-hover:text-purple-300 flex items-center gap-1">
+                    Use Template <ArrowRight className="w-4 h-4" />
+                  </div>
                 </button>
-                {CAMPAIGN_TEMPLATES.map(tpl => (
-                  <button
-                    key={tpl.id}
-                    onClick={() => {
-                      setSelectedTemplate(tpl.id);
-                      setNewCampaign({
-                        ...newCampaign,
-                        name: tpl.name,
-                        masterPrompt: tpl.prompt,
-                        selectedPlatforms: tpl.platforms
-                      });
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 ${
-                      selectedTemplate === tpl.id
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                        : 'bg-slate-800 text-slate-300 border border-slate-700'
-                    }`}
-                  >
-                    <tpl.icon className="w-4 h-4" />
-                    {tpl.name}
-                  </button>
-                ))}
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* New Campaign Form */}
+      {showNewCampaign && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white">Create New Campaign</h3>
                 <button
                   onClick={() => setShowNewCampaign(false)}
-                  className="p-2 rounded-lg hover:bg-slate-800"
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-slate-400" />
                 </button>
@@ -405,10 +459,10 @@ const CampaignsTab = () => {
               <div>
                 <label className="text-white font-medium mb-2 block">Client</label>
                 <div className="grid grid-cols-3 gap-3">
-                  {(['DFSA', 'Atlas', 'YourBud'] as const).map((client) => (
+                  {['DFSA', 'Atlas', 'YourBud'].map(client => (
                     <button
                       key={client}
-                      onClick={() => setNewCampaign({...newCampaign, client: client})}
+                      onClick={() => setNewCampaign({...newCampaign, client: client as any})}
                       className={`p-3 rounded-lg border transition-all ${
                         newCampaign.client === client
                           ? 'bg-purple-500/20 border-purple-500 text-white'
@@ -452,35 +506,6 @@ const CampaignsTab = () => {
                 </select>
               </div>
 
-              {/* Duration & Quality */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-white font-medium mb-2 block">Duration</label>
-                  <input
-                    type="range"
-                    min={3}
-                    max={12}
-                    value={newCampaign.duration}
-                    onChange={(e) => setNewCampaign({...newCampaign, duration: parseInt(e.target.value)})}
-                    className="w-full accent-purple-500"
-                  />
-                  <div className="text-slate-400 text-sm mt-1">{newCampaign.duration}s</div>
-                </div>
-
-                <div>
-                  <label className="text-white font-medium mb-2 block">Quality</label>
-                  <select
-                    value={newCampaign.quality}
-                    onChange={(e) => setNewCampaign({...newCampaign, quality: e.target.value})}
-                    className="w-full p-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="1080p">1080p</option>
-                    <option value="4K">4K</option>
-                    <option value="720p">720p</option>
-                  </select>
-                </div>
-              </div>
-
               {/* Platform Selection */}
               <div>
                 <label className="text-white font-medium mb-2 block">Target Platforms</label>
@@ -510,18 +535,33 @@ const CampaignsTab = () => {
                             : 'bg-slate-800 border-slate-700 hover:border-slate-600'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 ${platform.color} rounded-lg`}>
-                            <Icon className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="text-left">
-                            <div className="text-white font-medium">{platform.name}</div>
-                            <div className="text-slate-400 text-xs">{platform.dimensions} • {platform.aspectRatio}</div>
-                          </div>
-                        </div>
+                        <Icon className="w-5 h-5 text-white mb-2" />
+                        <div className="text-sm font-medium text-white">{platform.name}</div>
+                        <div className="text-xs text-slate-400">{platform.dimensions}</div>
+                        {isSelected && (
+                          <CheckCircle className="w-4 h-4 text-purple-400 mt-2" />
+                        )}
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Cost Estimate */}
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-slate-400 text-sm">Estimated Cost</div>
+                    <div className="text-2xl font-bold text-white">
+                      ${(newCampaign.selectedPlatforms.length * 0.50).toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-slate-400 text-sm">Platforms Selected</div>
+                    <div className="text-2xl font-bold text-purple-400">
+                      {newCampaign.selectedPlatforms.length}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -536,13 +576,138 @@ const CampaignsTab = () => {
               <button
                 onClick={createCampaign}
                 disabled={!newCampaign.masterPrompt || newCampaign.selectedPlatforms.length === 0}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                <Sparkles className="w-4 h-4" />
+                <Wand2 className="w-4 h-4" />
                 Create Campaign
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Campaign Details Modal */}
+      {selectedCampaign && !showNewCampaign && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-white">{selectedCampaign.name}</h3>
+                  <p className="text-slate-400 text-sm">{selectedCampaign.client} Campaign</p>
+                </div>
+                <button
+                  onClick={() => setSelectedCampaign(null)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Campaign Info */}
+              <div className="bg-slate-800 rounded-xl p-4 mb-6">
+                <p className="text-white mb-3">{selectedCampaign.masterPrompt}</p>
+                <div className="flex gap-4 text-sm text-slate-400">
+                  <div className="flex items-center gap-1">
+                    <Camera className="w-4 h-4" />
+                    {selectedCampaign.cameraMovement}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {selectedCampaign.duration}s
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image className="w-4 h-4" />
+                    {selectedCampaign.quality}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Layers className="w-4 h-4" />
+                    {selectedCampaign.referenceImages.length} references
+                  </div>
+                </div>
+              </div>
+
+              {/* Platform Variations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedCampaign.platforms.map(platform => (
+                  <PlatformCard 
+                    key={platform.platform} 
+                    platform={platform} 
+                    campaign={selectedCampaign}
+                  />
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between items-center mt-6">
+                <div className="flex gap-3">
+                  <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    Edit Campaign
+                  </button>
+                  <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <Copy className="w-4 h-4" />
+                    Duplicate
+                  </button>
+                </div>
+                
+                {selectedCampaign.status === 'draft' && (
+                  <button
+                    onClick={() => generateCampaign(selectedCampaign.id)}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all flex items-center gap-2"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    Generate All Variations
+                  </button>
+                )}
+                
+                {selectedCampaign.status === 'generating' && (
+                  <div className="px-6 py-2 bg-blue-500/20 text-blue-400 rounded-lg font-medium flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    Generating Campaign...
+                  </div>
+                )}
+                
+                {selectedCampaign.status === 'completed' && (
+                  <button className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Download All
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Campaigns List */}
+      {campaigns.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {campaigns.map(campaign => (
+            <CampaignCard key={campaign.id} campaign={campaign} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {campaigns.length === 0 && !showNewCampaign && (
+        <div className="text-center py-12 mt-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Target className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">No campaigns yet</h3>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            Create your first multi-platform campaign from a single brief. One prompt, endless possibilities.
+          </p>
+          <button
+            onClick={() => setShowNewCampaign(true)}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all inline-flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Create Your First Campaign
+          </button>
         </div>
       )}
     </div>
