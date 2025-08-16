@@ -1,0 +1,8 @@
+boto3
+google-genai
+requests
+uvicorn
+asyncio
+pydantic
+fastapi
+dotenv
