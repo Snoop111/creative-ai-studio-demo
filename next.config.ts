@@ -2,14 +2,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // --- DEMO ONLY: let builds pass even with ESLint/TS issues ---
+  // Demo-only: don’t fail the build on lint/TS issues
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-  // -------------------------------------------------------------
 
-  // keep defaults predictable (safe to leave on)
+  // fine to keep
   reactStrictMode: true,
-  swcMinify: true,
 };
 
 export default nextConfig;
