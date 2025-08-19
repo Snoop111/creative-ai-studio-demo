@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Video, Download, Share2, Copy, Trash2, Edit3, 
-  Filter, Search, Calendar, Camera, Layers, 
+import {
+  Video, Download, Share2, Copy, Trash2, Edit3,
+  Filter, Search, Calendar, Camera, Layers,
   CheckCircle, Clock, XCircle, MoreVertical,
   Play, Eye, RefreshCw, Sparkles
 } from 'lucide-react';
@@ -59,7 +59,7 @@ const LibraryTab = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ limit: 50 })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setVideos(data.videos || []);
@@ -170,8 +170,8 @@ const LibraryTab = () => {
         {/* Thumbnail */}
         <div className="relative aspect-video bg-slate-800">
           {video.thumbnail_url ? (
-            <img 
-              src={video.thumbnail_url} 
+            <img
+              src={video.thumbnail_url}
               alt={video.prompt}
               className="w-full h-full object-cover"
             />
@@ -180,7 +180,7 @@ const LibraryTab = () => {
               <Video className="w-12 h-12 text-slate-600" />
             </div>
           )}
-          
+
           {/* Overlay on hover */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
             <button className="p-3 bg-purple-500 rounded-lg hover:bg-purple-600 transition-colors">
@@ -208,7 +208,7 @@ const LibraryTab = () => {
         {/* Content */}
         <div className="p-4">
           <h3 className="text-white font-medium mb-2 line-clamp-2">{video.prompt}</h3>
-          
+
           <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
             <span>{video.client}</span>
             <span>{new Date(video.created_at).toLocaleDateString()}</span>
@@ -241,7 +241,7 @@ const LibraryTab = () => {
                 <Edit3 className="w-4 h-4" />
               </button>
             </div>
-            <button 
+            <button
               onClick={() => setShowMenu(!showMenu)}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative"
             >
@@ -293,7 +293,7 @@ const LibraryTab = () => {
           </div>
 
           {/* Client Filter */}
-          <select 
+          <select
             value={filters.client}
             onChange={(e) => setFilters({...filters, client: e.target.value})}
             className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
@@ -305,7 +305,7 @@ const LibraryTab = () => {
           </select>
 
           {/* Status Filter */}
-          <select 
+          <select
             value={filters.status}
             onChange={(e) => setFilters({...filters, status: e.target.value})}
             className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
@@ -317,7 +317,7 @@ const LibraryTab = () => {
           </select>
 
           {/* Camera Filter */}
-          <select 
+          <select
             value={filters.cameraType}
             onChange={(e) => setFilters({...filters, cameraType: e.target.value})}
             className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
@@ -334,7 +334,7 @@ const LibraryTab = () => {
           </select>
 
           {/* Date Range */}
-          <select 
+          <select
             value={filters.dateRange}
             onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
             className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500"

@@ -126,9 +126,7 @@ MODEL_REGISTRY = {
     }
 }
 
-# VFX Templates
 
-# === VFX Templates (6 new effects, long-form modifiers) ===
 # === VFX Templates (new 6-pack; long-form, UI-aligned ids) ===
 VFX_TEMPLATES = {
     "earth-zoom-out": {

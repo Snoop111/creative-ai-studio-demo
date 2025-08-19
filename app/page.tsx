@@ -171,27 +171,26 @@ export default function LandingPage() {
     }
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-purple-950 overflow-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg" />
-              <span className="text-xl font-bold text-white">Creative AI Studio</span>
-            </div>
-            <div className="flex items-center gap-8">
-              <button className="text-slate-400 hover:text-white transition-colors">Features</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Clients</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Pricing</button>
-              <a href="/studio" className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all">
-                Enter Studio
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+ return (
+   <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-purple-950 overflow-hidden">
+     {/* Navigation */}
+     <nav className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800">
+       <div className="container mx-auto px-4 sm:px-6 py-4">
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-3">
+             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg" />
+             <span className="text-lg sm:text-xl font-bold text-white">Creative AI Studio</span>
+           </div>
+           <div className="flex items-center gap-2 sm:gap-8">
+             <button className="hidden lg:block text-slate-400 hover:text-white transition-colors">Features</button>
+             <button className="hidden lg:block text-slate-400 hover:text-white transition-colors">Clients</button>
+             <a href="/studio" className="px-4 py-2 sm:px-6 sm:py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all text-sm sm:text-base">
+               Enter Studio
+             </a>
+           </div>
+         </div>
+       </div>
+     </nav>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20">
@@ -216,10 +215,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full mb-6">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-purple-300">Powered by Veo 3 & Claude</span>
-              </div>
+
               
               <h1 className="text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
                 Create
